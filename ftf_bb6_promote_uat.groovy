@@ -5,7 +5,6 @@ def image_version = docker_image.split(':')[1]
 def config_rc_count = 0
 def new_conf_tag = ''
 def new_chart_tag = ''
-def commit_hash = env.GIT_COMMIT_HASH
 
 def conf_branch = env.CONF_BRANCH
 
@@ -48,10 +47,11 @@ pipeline {
                         }
                     }
                 }
+
                 script {
-                    env.GIT_COMMIT_HASH=sh(returnStdout: true, script: "git rev-parse --abbrev-ref HEAD").trim()
+                    GIT_HASH = sh(returnStdout: true, script: "git rev-parse --short HEAD").trim()
                 }
-             
+                
                 dir('charts-ftf-bb6') {
                     script {
                         sh "git checkout ${uat_chart_branch}"
@@ -179,7 +179,7 @@ pipeline {
                             sh """#!/bin/bash -e
                                 |set -v
                                 |curl -f -u \${nexus_credentials} --upload-file ${chart_name}.tar \\
-                                |    https://${nexus_secured_host_raw}:8443/repository/bb6_promoted_charts_${target_env}/${chart_name}/${chart_name}.tar
+                                |    https://${nexus_secured_host_raw}:8443/repository/bb6_promoted_charts_${target_env}/${chart_name}/${chart_name}-${commit_hash}.tar
                                 """.stripMargin()
                          }
 
@@ -192,13 +192,13 @@ pipeline {
                                     <td>Config Tag:</td><td>none</td>
                                 </tr>
                                 <tr>
-                                    <td>Chart Tag:</td><td>${target_env}-${chart_name}</td>
+                                    <td>Chart Tag:</td><td>${target_env}-${chart_name}-${commit_hash}</td>
                                 </tr>
                                 <tr>
                                     <td>Nexus Package: </td>
                                     <td>
                                         <a name="nexus_package_url" href="https://${nexus_secured_host_raw}:8443/repository/bb6_ocp_promoted_charts_${target_env}/${chart_name}/${chart_name}.tar">
-                                            https://${nexus_secured_host_raw}:8443/repository/bb6_ocp_promoted_charts_${target_env}/${chart_name}/${chart_name}.tar
+                                            https://${nexus_secured_host_raw}:8443/repository/bb6_ocp_promoted_charts_${target_env}/${chart_name}/${chart_name}-${commit_hash}.tar
                                         </a>
                                     </td>
                                 </tr>
